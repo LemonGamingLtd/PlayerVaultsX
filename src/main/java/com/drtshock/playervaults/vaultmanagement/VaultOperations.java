@@ -387,7 +387,7 @@ public class VaultOperations {
         }
         PlayerCount newCount = new PlayerCount(vaultCount, Instant.now());
         countCache.put(uuid, newCount);
-        PlayerVaults.getInstance().getServer().getScheduler().runTaskLater(PlayerVaults.getInstance(), () -> {
+        PlayerVaults.getInstance().getScheduler().runTaskLater(() -> {
             if (countCache.get(uuid) == newCount) {
                 countCache.remove(uuid); // Do a lil cleanup to avoid the world's smallest memory leak
             }

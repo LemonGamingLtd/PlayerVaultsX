@@ -20,12 +20,12 @@ package com.drtshock.playervaults.listeners;
 
 import com.drtshock.playervaults.PlayerVaults;
 import com.drtshock.playervaults.vaultmanagement.VaultManager;
+import me.nahu.scheduler.wrapper.runnable.WrappedRunnable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.UUID;
 
@@ -37,12 +37,12 @@ public class VaultPreloadListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         PlayerVaults.getInstance().updateNotification(event.getPlayer());
         final UUID uuid = event.getPlayer().getUniqueId();
-        new BukkitRunnable() {
+        new WrappedRunnable() {
             @Override
             public void run() {
                 vm.cachePlayerVaultFile(uuid.toString());
             }
-        }.runTaskAsynchronously(PlayerVaults.getInstance());
+        }.runTaskAsynchronously(PlayerVaults.getInstance().getScheduler());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

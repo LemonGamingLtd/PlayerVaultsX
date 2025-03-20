@@ -70,7 +70,7 @@ public class ConvertCommand implements CommandExecutor {
                 } else {
                     // Fork into background
                     this.plugin.getTL().convertBackground().title().send(sender);
-                    PlayerVaults.getInstance().getServer().getScheduler().runTaskLaterAsynchronously(PlayerVaults.getInstance(), () -> {
+                    PlayerVaults.getInstance().getScheduler().runTaskLaterAsynchronously(() -> {
                         int converted = 0;
                         VaultOperations.setLocked(true);
                         for (Converter converter : applicableConverters) {

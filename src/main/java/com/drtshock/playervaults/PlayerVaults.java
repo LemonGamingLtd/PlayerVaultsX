@@ -38,6 +38,9 @@ import com.drtshock.playervaults.vaultmanagement.EconomyOperations;
 import com.drtshock.playervaults.vaultmanagement.VaultManager;
 import com.drtshock.playervaults.vaultmanagement.VaultViewInfo;
 import com.google.gson.Gson;
+import me.nahu.scheduler.wrapper.WrappedScheduler;
+import me.nahu.scheduler.wrapper.WrappedSchedulerBuilder;
+import me.nahu.scheduler.wrapper.runnable.WrappedRunnable;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
@@ -59,7 +62,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import dev.kitteh.cardboardbox.CardboardBox;
 import sun.misc.Unsafe;
 
@@ -118,6 +120,7 @@ public class PlayerVaults extends JavaPlugin {
     private Metrics metrics;
     private final Config config = new Config();
     private BukkitAudiences platform;
+    private WrappedScheduler scheduler;
     private final Translation translation = new Translation(this);
     private final List<String> exceptions = new CopyOnWriteArrayList<>();
     private String updateCheck;
@@ -147,6 +150,8 @@ public class PlayerVaults extends JavaPlugin {
             return;
         }
         instance = this;
+        this.scheduler = WrappedSchedulerBuilder.builder().plugin(this).build();
+        this.getLogger().info("Initialized scheduler of type: " + this.scheduler.getImplementationType());
         long start = System.currentTimeMillis();
         long time = System.currentTimeMillis();
         UpdateCheck update = new UpdateCheck("PlayerVaultsX", this.getDescription().getVersion(), this.getServer().getName(), this.getServer().getVersion());
@@ -191,14 +196,14 @@ public class PlayerVaults extends JavaPlugin {
             getServer().getScheduler().runTaskAsynchronously(this, new Cleanup(getConf().getPurge().getDaysSinceLastEdit()));
         }
 
-        new BukkitRunnable() {
+        new WrappedRunnable() {
             @Override
             public void run() {
                 if (saveQueued) {
                     saveSignsFile();
                 }
             }
-        }.runTaskTimer(this, 20, 20);
+        }.runTaskTimer(getScheduler(), 20, 20);
 
         this.metrics = new Metrics(this, 6905);
         Plugin vault = getServer().getPluginManager().getPlugin("Vault");
@@ -298,7 +303,7 @@ public class PlayerVaults extends JavaPlugin {
 
         this.updateCheck = new Gson().toJson(update);
         if (!HelpMeCommand.likesCats) return;
-        new BukkitRunnable() {
+        new WrappedRunnable() {
             @Override
             public void run() {
                 try {
@@ -333,7 +338,7 @@ public class PlayerVaults extends JavaPlugin {
                 } catch (Exception ignored) {
                 }
             }
-        }.runTaskTimerAsynchronously(this, 1, 20 /* ticks */ * 60 /* seconds in a minute */ * 60 /* minutes in an hour*/);
+        }.runTaskTimerAsynchronously(getScheduler(), 1, 20 /* ticks */ * 60 /* seconds in a minute */ * 60 /* minutes in an hour*/);
     }
 
     private void metricsLine(String name, Callable<Integer> callable) {
@@ -653,6 +658,10 @@ public class PlayerVaults extends JavaPlugin {
 
     public int getMaxVaultAmountPermTest() {
         return this.maxVaultAmountPermTest;
+    }
+
+    public WrappedScheduler getScheduler() {
+        return scheduler;
     }
 
     public BukkitAudiences getPlatform() {

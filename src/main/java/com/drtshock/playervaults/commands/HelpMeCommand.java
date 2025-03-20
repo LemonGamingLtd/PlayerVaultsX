@@ -20,6 +20,7 @@ package com.drtshock.playervaults.commands;
 
 import com.drtshock.playervaults.PlayerVaults;
 import com.drtshock.playervaults.util.Permission;
+import me.nahu.scheduler.wrapper.runnable.WrappedRunnable;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -30,7 +31,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.kitteh.pastegg.PasteBuilder;
 import org.kitteh.pastegg.PasteContent;
 import org.kitteh.pastegg.PasteFile;
@@ -78,7 +78,7 @@ public class HelpMeCommand implements CommandExecutor {
                 mainInfo.append("  ").append(plugin.getDescription().getAuthors()).append('\n');
             }
 
-            new BukkitRunnable() {
+            new WrappedRunnable() {
                 private final PasteBuilder builder = new PasteBuilder().name("PlayerVaultsX Debug")
                         .visibility(Visibility.UNLISTED)
                         .expires(ZonedDateTime.now(ZoneOffset.UTC).plusDays(3));
@@ -107,7 +107,7 @@ public class HelpMeCommand implements CommandExecutor {
                         }
                         add("config.conf", getFile(dataPath.resolve("config.conf")));
                         PasteBuilder.PasteResult result = builder.build();
-                        new BukkitRunnable() {
+                        new WrappedRunnable() {
                             @Override
                             public void run() {
                                 Audience audience = PlayerVaults.getInstance().getPlatform().sender(sender);
@@ -121,18 +121,18 @@ public class HelpMeCommand implements CommandExecutor {
                                     PlayerVaults.getInstance().getLogger().warning("Received: " + result.getMessage());
                                 }
                             }
-                        }.runTask(PlayerVaults.getInstance());
+                        }.runTask(PlayerVaults.getInstance().getScheduler());
                     } catch (Exception e) {
                         PlayerVaults.getInstance().getLogger().log(Level.SEVERE, "Failed to execute debug command", e);
-                        new BukkitRunnable() {
+                        new WrappedRunnable() {
                             @Override
                             public void run() {
                                 PlayerVaults.getInstance().getPlatform().sender(sender).sendMessage(MiniMessage.miniMessage().deserialize("<red>Failed to generate output. See console for details."));
                             }
-                        }.runTask(PlayerVaults.getInstance());
+                        }.runTask(PlayerVaults.getInstance().getScheduler());
                     }
                 }
-            }.runTaskAsynchronously(PlayerVaults.getInstance());
+            }.runTaskAsynchronously(PlayerVaults.getInstance().getScheduler());
         }
         return true;
     }

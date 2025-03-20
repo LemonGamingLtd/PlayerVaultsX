@@ -19,6 +19,7 @@
 package com.drtshock.playervaults.vaultmanagement;
 
 import com.drtshock.playervaults.PlayerVaults;
+import me.nahu.scheduler.wrapper.runnable.WrappedRunnable;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -27,7 +28,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -258,7 +258,7 @@ public class VaultManager {
      * @param number The vault number.
      */
     public void deleteVault(CommandSender sender, final String holder, final int number) {
-        new BukkitRunnable() {
+        new WrappedRunnable() {
             @Override
             public void run() {
                 File file = new File(directory, holder + ".yml");
@@ -278,7 +278,7 @@ public class VaultManager {
                     }
                 }
             }
-        }.runTaskAsynchronously(PlayerVaults.getInstance());
+        }.runTaskAsynchronously(PlayerVaults.getInstance().getScheduler());
 
         OfflinePlayer player = Bukkit.getPlayer(holder);
         if (player != null) {
