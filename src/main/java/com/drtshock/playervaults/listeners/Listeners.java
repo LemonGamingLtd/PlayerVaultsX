@@ -24,6 +24,7 @@ import com.drtshock.playervaults.events.BlacklistedItemEvent;
 import com.drtshock.playervaults.util.Permission;
 import com.drtshock.playervaults.vaultmanagement.VaultHolder;
 import com.drtshock.playervaults.vaultmanagement.VaultManager;
+import com.drtshock.playervaults.vaultmanagement.VaultOperations;
 import com.drtshock.playervaults.vaultmanagement.VaultViewInfo;
 import org.bukkit.Bukkit;
 import org.bukkit.enchantments.Enchantment;
@@ -51,6 +52,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.drtshock.playervaults.vaultmanagement.VaultViewInfo.FILLER_ICON;
+import static com.drtshock.playervaults.vaultmanagement.VaultViewInfo.NEXT_PAGE_ICON;
+import static com.drtshock.playervaults.vaultmanagement.VaultViewInfo.PREVIOUS_PAGE_ICON;
+
 public class Listeners implements Listener {
 
     public final PlayerVaults plugin;
@@ -63,6 +68,7 @@ public class Listeners implements Listener {
     public void saveVault(Player player, Inventory inventory) {
         VaultViewInfo info = plugin.getInVault().remove(player.getUniqueId().toString());
         if (info != null) {
+
             boolean badDay = false;
             if (!(inventory.getHolder() instanceof VaultHolder)) {
                 PlayerVaults.getInstance().getLogger().severe("Encountered lost vault situation for player '" + player.getName() + "', instead finding a '" + inventory.getType() + "' - attempting to save the vault if no viewers present");
@@ -80,6 +86,8 @@ public class Listeners implements Listener {
             if (inventory.getViewers().size() <= 1) {
                 PlayerVaults.debug("Saving!");
                 vaultManager.saveVault(inv, info.getVaultName(), info.getNumber());
+
+                info.restore(player);
                 plugin.getOpenInventories().remove(info.toString());
             } else {
                 if (badDay) {
@@ -136,33 +144,49 @@ public class Listeners implements Listener {
         Player player = (Player) event.getWhoClicked();
 
         Inventory clickedInventory = event.getClickedInventory();
-        if (clickedInventory != null) {
-            VaultViewInfo info = PlayerVaults.getInstance().getInVault().get(player.getUniqueId().toString());
-            if (info != null) {
-                int num = info.getNumber();
-                String inventoryTitle = event.getView().getTitle();
-                String title = this.plugin.getVaultTitle(String.valueOf(num));
-                if (inventoryTitle.equalsIgnoreCase(title)) {
-                    ItemStack[] items = new ItemStack[2];
-                    items[0] = event.getCurrentItem();
-                    if (event.getHotbarButton() > -1 && event.getWhoClicked().getInventory().getItem(event.getHotbarButton()) != null) {
-                        items[1] = event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
-                    }
-                    if (event.getClick().name().equals("SWAP_OFFHAND")) {
-                        items[1] = event.getWhoClicked().getInventory().getItemInOffHand();
-                    }
+        if (clickedInventory == null) {
+            return;
+        }
 
-                    if (!player.hasPermission(Permission.BYPASS_BLOCKED_ITEMS)) {
-                        for (ItemStack item : items) {
-                            if (item == null) {
-                                continue;
-                            }
-                            if (this.isBlocked(player, item, info)) {
-                                event.setCancelled(true);
-                                return;
-                            }
-                        }
-                    }
+        VaultViewInfo info = PlayerVaults.getInstance().getInVault().get(player.getUniqueId().toString());
+        if (info == null) {
+            return;
+        }
+
+        int num = info.getNumber();
+        String inventoryTitle = event.getView().getTitle();
+        String title = this.plugin.getVaultTitle(String.valueOf(num));
+        if (!inventoryTitle.equalsIgnoreCase(title)) {
+            return;
+        }
+
+        final ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem != null) {
+            if (clickedItem.equals(NEXT_PAGE_ICON)) {
+                VaultOperations.openOwnVault(player, String.valueOf(num + 1), true);
+            }
+            if (clickedItem.equals(PREVIOUS_PAGE_ICON) && num > 1) {
+                VaultOperations.openOwnVault(player, String.valueOf(num - 1), true);
+            }
+        }
+
+        ItemStack[] items = new ItemStack[2];
+        items[0] = clickedItem;
+        if (event.getHotbarButton() > -1 && event.getWhoClicked().getInventory().getItem(event.getHotbarButton()) != null) {
+            items[1] = event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
+        }
+        if (event.getClick().name().equals("SWAP_OFFHAND")) {
+            items[1] = event.getWhoClicked().getInventory().getItemInOffHand();
+        }
+
+        if (!player.hasPermission(Permission.BYPASS_BLOCKED_ITEMS)) {
+            for (ItemStack item : items) {
+                if (item == null) {
+                    continue;
+                }
+                if (this.isBlocked(player, item, info)) {
+                    event.setCancelled(true);
+                    return;
                 }
             }
         }
@@ -200,6 +224,9 @@ public class Listeners implements Listener {
     private boolean isBlocked(Player player, ItemStack item, VaultViewInfo info) {
         List<BlacklistedItemEvent.Reason> reasons = new ArrayList<>();
         Map<BlacklistedItemEvent.Reason, Translation.TL.Builder> responses = new HashMap<>();
+        if (item.equals(FILLER_ICON) || item.equals(NEXT_PAGE_ICON) || item.equals(PREVIOUS_PAGE_ICON)) {
+            reasons.add(BlacklistedItemEvent.Reason.NAVIGATION_HUB);
+        }
         if (PlayerVaults.getInstance().isBlockWithModelData() && ((item.getItemMeta() instanceof ItemMeta i) && i.hasCustomModelData())) {
             reasons.add(BlacklistedItemEvent.Reason.HAS_MODEL_DATA);
             responses.put(BlacklistedItemEvent.Reason.HAS_MODEL_DATA, this.plugin.getTL().blockedItemWithModelData().title());
@@ -221,7 +248,9 @@ public class Listeners implements Listener {
             BlacklistedItemEvent event = new BlacklistedItemEvent(player, item, reasons, info.getVaultName(), info.getNumber());
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
-                responses.get(event.getReasons().getFirst()).send(player);
+                if (responses.containsKey(event.getReasons().getFirst())) {
+                    responses.get(event.getReasons().getFirst()).send(player);
+                }
                 return true;
             }
         }

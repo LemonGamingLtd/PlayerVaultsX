@@ -171,6 +171,9 @@ public class VaultOperations {
                 }
 
                 VaultViewInfo info = new VaultViewInfo(player.getUniqueId().toString(), number);
+                info.initialize(player);
+
+                PlayerVaults.getInstance().getInVault().put(player.getUniqueId().toString(), info);
                 PlayerVaults.getInstance().getOpenInventories().put(info.toString(), inv);
 
                 if (send) {

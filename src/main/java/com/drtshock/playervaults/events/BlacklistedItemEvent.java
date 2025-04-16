@@ -31,7 +31,9 @@ public class BlacklistedItemEvent extends Event implements Cancellable {
         ENCHANTMENT,
         HAS_MODEL_DATA,
         HAS_NO_MODEL_DATA,
-        TYPE;
+        TYPE,
+        NAVIGATION_HUB,
+        ;
     }
 
     private static final HandlerList handlers = new HandlerList();

@@ -235,6 +235,7 @@ public class Translation {
         private TL blockedItemWithoutModelData = TL.of("<error>This item is blocked from vaults.");
         private TL blockedItemWithEnchantments = TL.of("<error>This item's enchantments are blocked from vaults.");
         private TL signsDisabled = TL.of("<error>Vault signs are currently disabled.");
+        private TL blockedNavigationHubIcons = TL.of("<error>You cannot interact with navigation hub icons!");
     }
 
     private Placeholders placeholders = new Placeholders();
@@ -377,6 +378,10 @@ public class Translation {
 
     public @NonNull TL signsDisabled() {
         return this.translations.signsDisabled;
+    }
+
+    public @NonNull TL blockedNavigationHubIcons() {
+        return this.translations.blockedNavigationHubIcons;
     }
 
     public @NonNull Map<String, String> colorMappings() {

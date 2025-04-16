@@ -78,7 +78,7 @@ public class ConsoleCommand implements CommandExecutor {
                         return true;
                     }
                     if (VaultOperations.openOtherVault(plr, owner, vaultId)) {
-                        PlayerVaults.getInstance().getInVault().put(plr.getUniqueId().toString(), new VaultViewInfo(owner, number));
+                        //PlayerVaults.getInstance().getInVault().put(plr.getUniqueId().toString(), new VaultViewInfo(owner, number)); ?????????????????????????????????
                     } else {
                         sender.sendMessage("FAILED!?");
                     }
