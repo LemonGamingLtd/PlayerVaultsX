@@ -162,11 +162,19 @@ public class Listeners implements Listener {
 
         final ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem != null) {
-            if (clickedItem.equals(NEXT_PAGE_ICON)) {
-                VaultOperations.openOwnVault(player, String.valueOf(num + 1), true);
+            if (clickedItem.isSimilar(NEXT_PAGE_ICON)) {
+                if (info.isForeign(player)) {
+                    VaultOperations.openOtherVault(player, info.getVaultName(), String.valueOf(num + 1), true);
+                } else {
+                    VaultOperations.openOwnVault(player, String.valueOf(num + 1), true);
+                }
             }
-            if (clickedItem.equals(PREVIOUS_PAGE_ICON) && num > 1) {
-                VaultOperations.openOwnVault(player, String.valueOf(num - 1), true);
+            if (clickedItem.isSimilar(PREVIOUS_PAGE_ICON) && num > 1) {
+                if (info.isForeign(player)) {
+                    VaultOperations.openOtherVault(player, info.getVaultName(), String.valueOf(num - 1), true);
+                } else {
+                    VaultOperations.openOwnVault(player, String.valueOf(num - 1), true);
+                }
             }
         }
 
@@ -224,7 +232,7 @@ public class Listeners implements Listener {
     private boolean isBlocked(Player player, ItemStack item, VaultViewInfo info) {
         List<BlacklistedItemEvent.Reason> reasons = new ArrayList<>();
         Map<BlacklistedItemEvent.Reason, Translation.TL.Builder> responses = new HashMap<>();
-        if (item.equals(FILLER_ICON) || item.equals(NEXT_PAGE_ICON) || item.equals(PREVIOUS_PAGE_ICON)) {
+        if (item.isSimilar(FILLER_ICON) || item.isSimilar(NEXT_PAGE_ICON) || item.isSimilar(PREVIOUS_PAGE_ICON)) {
             reasons.add(BlacklistedItemEvent.Reason.NAVIGATION_HUB);
         }
         if (PlayerVaults.getInstance().isBlockWithModelData() && ((item.getItemMeta() instanceof ItemMeta i) && i.hasCustomModelData())) {

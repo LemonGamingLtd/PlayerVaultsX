@@ -376,6 +376,7 @@ public class PlayerVaults extends JavaPlugin {
                     this.openInventories.remove(info.toString());
                     // try this to make sure that they can't make further edits if the process hangs.
                     player.closeInventory();
+                    info.restore(player);
                 }
 
                 this.inVault.remove(player.getUniqueId().toString());

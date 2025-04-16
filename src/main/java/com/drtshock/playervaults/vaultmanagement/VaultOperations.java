@@ -266,6 +266,8 @@ public class VaultOperations {
 
             // Need to set ViewInfo for a third party vault for the opening player.
             VaultViewInfo info = new VaultViewInfo(vaultOwner, number);
+            info.initialize(player);
+
             PlayerVaults.getInstance().getInVault().put(player.getUniqueId().toString(), info);
             PlayerVaults.getInstance().getOpenInventories().put(player.getUniqueId().toString(), inv);
             return true;

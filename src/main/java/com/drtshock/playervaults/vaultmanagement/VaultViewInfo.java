@@ -89,8 +89,8 @@ public class VaultViewInfo {
             final char icon = SLOT_SETUP.charAt(slot);
             switch (icon) {
                 case '#' -> inventory.setItem(reservedSlot, FILLER_ICON);
-                case '>' -> inventory.setItem(reservedSlot, NEXT_PAGE_ICON);
-                case '<' -> inventory.setItem(reservedSlot, PREVIOUS_PAGE_ICON);
+                case '>' -> inventory.setItem(reservedSlot, NEXT_PAGE_ICON.asQuantity(number + 1));
+                case '<' -> inventory.setItem(reservedSlot, PREVIOUS_PAGE_ICON.asQuantity(number));
             }
         }
     }
@@ -106,6 +106,16 @@ public class VaultViewInfo {
             final ItemStack item = this.holder.get(reservedSlot);
             inventory.setItem(reservedSlot, item);
         }
+    }
+
+    /**
+     * Check if the view is of a foreign ("other") player.
+     *
+     * @param player Player to check.
+     * @return {@code true} if it is foreign, {@code false} otherwise.
+     */
+    public boolean isForeign(@NotNull Player player) {
+        return !getVaultName().equals(player.getUniqueId().toString());
     }
 
     /**
