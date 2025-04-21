@@ -178,7 +178,7 @@ public class Listeners implements Listener {
             }
         }
 
-        ItemStack[] items = new ItemStack[2];
+        ItemStack[] items = new ItemStack[3];
         items[0] = clickedItem;
         if (event.getHotbarButton() > -1 && event.getWhoClicked().getInventory().getItem(event.getHotbarButton()) != null) {
             items[1] = event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
@@ -186,6 +186,7 @@ public class Listeners implements Listener {
         if (event.getClick().name().equals("SWAP_OFFHAND")) {
             items[1] = event.getWhoClicked().getInventory().getItemInOffHand();
         }
+        items[2] = event.getCursor();
 
         if (!player.hasPermission(Permission.BYPASS_BLOCKED_ITEMS)) {
             for (ItemStack item : items) {
