@@ -22,7 +22,6 @@ import com.drtshock.playervaults.PlayerVaults;
 import com.drtshock.playervaults.util.Permission;
 import com.drtshock.playervaults.vaultmanagement.VaultManager;
 import com.drtshock.playervaults.vaultmanagement.VaultOperations;
-import com.drtshock.playervaults.vaultmanagement.VaultViewInfo;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -53,6 +52,11 @@ public class VaultCommand implements CommandExecutor {
 
             switch (args.length) {
                 case 1:
+                    if (args[0].equalsIgnoreCase("togglebar")) {
+                        final boolean newStatus = this.plugin.getSettings().toggleNavigationBar(player.getUniqueId());
+                        this.plugin.getTL().toggledNavigationHubIcons().title().with("status", newStatus ? "Enabled" : "Disabled").send(sender);
+                        break;
+                    }
                     if (VaultOperations.openOwnVault(player, args[0], true)) {
                         //PlayerVaults.getInstance().getInVault().put(player.getUniqueId().toString(), new VaultViewInfo(player.getUniqueId().toString(), Integer.parseInt(args[0]))); ??????????????????????????????????????????????????????????????????
                     }

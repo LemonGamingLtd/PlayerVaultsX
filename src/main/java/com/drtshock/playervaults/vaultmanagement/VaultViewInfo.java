@@ -18,6 +18,7 @@
 
 package com.drtshock.playervaults.vaultmanagement;
 
+import com.drtshock.playervaults.PlayerVaults;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -26,6 +27,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
@@ -37,6 +39,7 @@ public class VaultViewInfo {
     public static final ItemStack FILLER_ICON = new ItemStack(Material.GRAY_DYE);
     public static final ItemStack NEXT_PAGE_ICON = new ItemStack(Material.GRAY_DYE);
     public static final ItemStack PREVIOUS_PAGE_ICON = new ItemStack(Material.GRAY_DYE);
+    public static final ItemStack DISABLE_BAR_ICON = new ItemStack(Material.GRAY_DYE);
 
     static {
         // TODO: Pull dynamically from packgen
@@ -52,10 +55,15 @@ public class VaultViewInfo {
             itemMeta.setCustomModelData(7);
             itemMeta.setDisplayName(ChatColor.YELLOW + "Next Page");
         });
+        DISABLE_BAR_ICON.editMeta(itemMeta -> {
+            itemMeta.setCustomModelData(20);
+            itemMeta.setDisplayName(ChatColor.RED + ChatColor.BOLD.toString() + "Disable Navigation Bar!");
+            itemMeta.setLore(List.of(ChatColor.RED + "You may reenable it with /pv togglebar!"));
+        });
     }
 
     private static final int[] RESERVED_SLOTS = IntStream.rangeClosed(9, 17).toArray();
-    private static final String SLOT_SETUP = "<#######>";
+    private static final String SLOT_SETUP = "<###x###>";
 
     final String vaultName;
     final int number;
@@ -78,12 +86,14 @@ public class VaultViewInfo {
      * @param player {@link Player} to handle.
      */
     public void initialize(@NotNull Player player) {
+        if (PlayerVaults.getInstance().getSettings().toggledNavigationBar(player.getUniqueId())) {
+            return;
+        }
+
         final PlayerInventory inventory = player.getInventory();
         for (final int reservedSlot : RESERVED_SLOTS) {
             final ItemStack item = inventory.getItem(reservedSlot);
-            if (item != null && !item.isEmpty()) {
-                this.holder.put(reservedSlot, item);
-            }
+            this.holder.put(reservedSlot, item);
 
             final int slot = reservedSlot - 9;
             final char icon = SLOT_SETUP.charAt(slot);
@@ -91,6 +101,7 @@ public class VaultViewInfo {
                 case '#' -> inventory.setItem(reservedSlot, FILLER_ICON);
                 case '>' -> inventory.setItem(reservedSlot, NEXT_PAGE_ICON.asQuantity(number + 1));
                 case '<' -> inventory.setItem(reservedSlot, PREVIOUS_PAGE_ICON.asQuantity(number));
+                case 'x' -> inventory.setItem(reservedSlot, DISABLE_BAR_ICON);
             }
         }
     }
@@ -101,6 +112,10 @@ public class VaultViewInfo {
      * @param player {@link Player} to handle.
      */
     public void restore(@NotNull Player player) {
+        if (this.holder.isEmpty()) {
+            return;
+        }
+
         final PlayerInventory inventory = player.getInventory();
         for (final int reservedSlot : RESERVED_SLOTS) {
             final ItemStack item = this.holder.get(reservedSlot);

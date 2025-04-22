@@ -27,6 +27,7 @@ import com.drtshock.playervaults.commands.SignSetInfo;
 import com.drtshock.playervaults.commands.VaultCommand;
 import com.drtshock.playervaults.config.Loader;
 import com.drtshock.playervaults.config.file.Config;
+import com.drtshock.playervaults.config.file.Settings;
 import com.drtshock.playervaults.config.file.Translation;
 import com.drtshock.playervaults.listeners.Listeners;
 import com.drtshock.playervaults.listeners.SignListener;
@@ -119,6 +120,7 @@ public class PlayerVaults extends JavaPlugin {
     private int maxVaultAmountPermTest;
     private Metrics metrics;
     private final Config config = new Config();
+    private final Settings settings = new Settings();
     private BukkitAudiences platform;
     private WrappedScheduler scheduler;
     private final Translation translation = new Translation(this);
@@ -419,6 +421,12 @@ public class PlayerVaults extends JavaPlugin {
             this.getLogger().log(Level.SEVERE, "Could not load config.", e);
         }
 
+        try {
+            Loader.loadAndSave("settings", this.settings);
+        } catch (IOException | IllegalAccessException e) {
+            this.getLogger().log(Level.SEVERE, "Could not load settings.", e);
+        }
+
         // Clear just in case this is a reload.
         blockedMats.clear();
         blockedEnchs.clear();
@@ -488,6 +496,10 @@ public class PlayerVaults extends JavaPlugin {
 
     public Config getConf() {
         return this.config;
+    }
+
+    public Settings getSettings() {
+        return settings;
     }
 
     private void loadSigns() {

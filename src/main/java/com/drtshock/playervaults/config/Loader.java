@@ -72,6 +72,10 @@ public class Loader {
         Files.write(file.toPath(), s.getBytes(StandardCharsets.UTF_8));
     }
 
+    public static void save(@NonNull File file, @NonNull Config config, @NonNull Object configObject) throws IOException, IllegalAccessException {
+
+    }
+
     public static @NonNull ConfigValue load(Config config, Object configObject) throws IllegalAccessException {
         return Loader.loadNode(config, configObject);
     }

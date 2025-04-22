@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.drtshock.playervaults.vaultmanagement.VaultViewInfo.DISABLE_BAR_ICON;
 import static com.drtshock.playervaults.vaultmanagement.VaultViewInfo.FILLER_ICON;
 import static com.drtshock.playervaults.vaultmanagement.VaultViewInfo.NEXT_PAGE_ICON;
 import static com.drtshock.playervaults.vaultmanagement.VaultViewInfo.PREVIOUS_PAGE_ICON;
@@ -176,17 +177,25 @@ public class Listeners implements Listener {
                     VaultOperations.openOwnVault(player, String.valueOf(num - 1), true);
                 }
             }
+            if (clickedItem.isSimilar(DISABLE_BAR_ICON)) {
+                this.plugin.getSettings().toggleNavigationBar(player.getUniqueId());
+                if (info.isForeign(player)) {
+                    VaultOperations.openOtherVault(player, info.getVaultName(), String.valueOf(num), true);
+                } else {
+                    VaultOperations.openOwnVault(player, String.valueOf(num), true);
+                }
+            }
         }
 
         ItemStack[] items = new ItemStack[3];
         items[0] = clickedItem;
+        items[1] = event.getCursor();
         if (event.getHotbarButton() > -1 && event.getWhoClicked().getInventory().getItem(event.getHotbarButton()) != null) {
-            items[1] = event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
+            items[2] = event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
         }
         if (event.getClick().name().equals("SWAP_OFFHAND")) {
-            items[1] = event.getWhoClicked().getInventory().getItemInOffHand();
+            items[2] = event.getWhoClicked().getInventory().getItemInOffHand();
         }
-        items[2] = event.getCursor();
 
         if (!player.hasPermission(Permission.BYPASS_BLOCKED_ITEMS)) {
             for (ItemStack item : items) {
@@ -233,7 +242,7 @@ public class Listeners implements Listener {
     private boolean isBlocked(Player player, ItemStack item, VaultViewInfo info) {
         List<BlacklistedItemEvent.Reason> reasons = new ArrayList<>();
         Map<BlacklistedItemEvent.Reason, Translation.TL.Builder> responses = new HashMap<>();
-        if (item.isSimilar(FILLER_ICON) || item.isSimilar(NEXT_PAGE_ICON) || item.isSimilar(PREVIOUS_PAGE_ICON)) {
+        if (item.isSimilar(FILLER_ICON) || item.isSimilar(NEXT_PAGE_ICON) || item.isSimilar(PREVIOUS_PAGE_ICON) || item.isSimilar(DISABLE_BAR_ICON)) {
             reasons.add(BlacklistedItemEvent.Reason.NAVIGATION_HUB);
         }
         if (PlayerVaults.getInstance().isBlockWithModelData() && ((item.getItemMeta() instanceof ItemMeta i) && i.hasCustomModelData())) {
