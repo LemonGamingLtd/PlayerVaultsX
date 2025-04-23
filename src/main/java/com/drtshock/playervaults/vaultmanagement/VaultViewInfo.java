@@ -24,6 +24,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -43,23 +44,26 @@ public class VaultViewInfo {
 
     static {
         // TODO: Pull dynamically from packgen
-        FILLER_ICON.editMeta(itemMeta -> {
-            itemMeta.setCustomModelData(27);
-            itemMeta.setDisplayName(ChatColor.RESET + "");
-        });
-        PREVIOUS_PAGE_ICON.editMeta(itemMeta -> {
-            itemMeta.setCustomModelData(5);
-            itemMeta.setDisplayName(ChatColor.YELLOW + "Previous Page");
-        });
-        NEXT_PAGE_ICON.editMeta(itemMeta -> {
-            itemMeta.setCustomModelData(7);
-            itemMeta.setDisplayName(ChatColor.YELLOW + "Next Page");
-        });
-        DISABLE_BAR_ICON.editMeta(itemMeta -> {
-            itemMeta.setCustomModelData(20);
-            itemMeta.setDisplayName(ChatColor.RED + ChatColor.BOLD.toString() + "Disable Navigation Bar!");
-            itemMeta.setLore(List.of(ChatColor.RED + "You may reenable it with /pv togglebar!"));
-        });
+        final ItemMeta fillerIconItemMeta = FILLER_ICON.getItemMeta();
+        fillerIconItemMeta.setCustomModelData(27);
+        fillerIconItemMeta.setDisplayName(ChatColor.RESET + "");
+        FILLER_ICON.setItemMeta(fillerIconItemMeta);
+
+        final ItemMeta previousPageIconItemMeta = NEXT_PAGE_ICON.getItemMeta();
+        previousPageIconItemMeta.setCustomModelData(5);
+        previousPageIconItemMeta.setDisplayName(ChatColor.YELLOW + "Previous Page");
+        PREVIOUS_PAGE_ICON.setItemMeta(previousPageIconItemMeta);
+
+        final ItemMeta nextPageIconItemMeta = NEXT_PAGE_ICON.getItemMeta();
+        nextPageIconItemMeta.setCustomModelData(7);
+        nextPageIconItemMeta.setDisplayName(ChatColor.YELLOW + "Next Page");
+        NEXT_PAGE_ICON.setItemMeta(nextPageIconItemMeta);
+
+        final ItemMeta disableBarIconItemMeta = DISABLE_BAR_ICON.getItemMeta();
+        disableBarIconItemMeta.setCustomModelData(20);
+        disableBarIconItemMeta.setDisplayName(ChatColor.RED + ChatColor.BOLD.toString() + "Disable Navigation Bar!");
+        disableBarIconItemMeta.setLore(List.of(ChatColor.RED + "You may reenable it with /pv togglebar!"));
+        DISABLE_BAR_ICON.setItemMeta(disableBarIconItemMeta);
     }
 
     private static final int[] RESERVED_SLOTS = IntStream.rangeClosed(9, 17).toArray();
@@ -97,11 +101,18 @@ public class VaultViewInfo {
 
             final int slot = reservedSlot - 9;
             final char icon = SLOT_SETUP.charAt(slot);
+
+            final ItemStack nextPageIcon = NEXT_PAGE_ICON.clone();
+            nextPageIcon.setAmount(number + 1);
+
+            final ItemStack previousPageIcon = PREVIOUS_PAGE_ICON.clone();
+            previousPageIcon.setAmount(number);
+
             switch (icon) {
-                case '#' -> inventory.setItem(reservedSlot, FILLER_ICON);
-                case '>' -> inventory.setItem(reservedSlot, NEXT_PAGE_ICON.asQuantity(number + 1));
-                case '<' -> inventory.setItem(reservedSlot, PREVIOUS_PAGE_ICON.asQuantity(number));
-                case 'x' -> inventory.setItem(reservedSlot, DISABLE_BAR_ICON);
+                case '#' -> inventory.setItem(reservedSlot, FILLER_ICON.clone());
+                case '>' -> inventory.setItem(reservedSlot, nextPageIcon);
+                case '<' -> inventory.setItem(reservedSlot, previousPageIcon);
+                case 'x' -> inventory.setItem(reservedSlot, DISABLE_BAR_ICON.clone());
             }
         }
     }
