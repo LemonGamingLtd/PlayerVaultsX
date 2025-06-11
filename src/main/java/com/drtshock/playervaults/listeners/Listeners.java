@@ -21,7 +21,6 @@ package com.drtshock.playervaults.listeners;
 import com.drtshock.playervaults.PlayerVaults;
 import com.drtshock.playervaults.config.file.Translation;
 import com.drtshock.playervaults.events.BlacklistedItemEvent;
-import com.drtshock.playervaults.util.Permission;
 import com.drtshock.playervaults.vaultmanagement.VaultHolder;
 import com.drtshock.playervaults.vaultmanagement.VaultManager;
 import com.drtshock.playervaults.vaultmanagement.VaultOperations;
@@ -34,6 +33,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -96,6 +96,16 @@ public class Listeners implements Listener {
                 }
                 PlayerVaults.debug("Other viewers found, not saving! " + inventory.getViewers().stream().map(HumanEntity::getName).collect(Collectors.joining(" ")));
             }
+        }
+    }
+
+    @EventHandler
+    public void onEntityDamageEvent(EntityDamageEvent event) {
+        if (event.isCancelled() || !(event.getEntity() instanceof Player player)) {
+            return;
+        }
+        if (PlayerVaults.getInstance().getInVault().containsKey(player.getUniqueId().toString())) {
+            player.closeInventory();
         }
     }
 
@@ -198,15 +208,15 @@ public class Listeners implements Listener {
         }
 
         //if (!player.hasPermission(Permission.BYPASS_BLOCKED_ITEMS)) {
-            for (ItemStack item : items) {
-                if (item == null) {
-                    continue;
-                }
-                if (this.isBlocked(player, item, info)) {
-                    event.setCancelled(true);
-                    return;
-                }
+        for (ItemStack item : items) {
+            if (item == null) {
+                continue;
             }
+            if (this.isBlocked(player, item, info)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
         //}
     }
 
@@ -227,12 +237,12 @@ public class Listeners implements Listener {
                 String title = this.plugin.getVaultTitle(String.valueOf(num));
                 if ((inventoryTitle != null && inventoryTitle.equalsIgnoreCase(title)) && event.getNewItems() != null) {
                     //if (!player.hasPermission(Permission.BYPASS_BLOCKED_ITEMS)) {
-                        for (ItemStack item : event.getNewItems().values()) {
-                            if (this.isBlocked(player, item, info)) {
-                                event.setCancelled(true);
-                                return;
-                            }
+                    for (ItemStack item : event.getNewItems().values()) {
+                        if (this.isBlocked(player, item, info)) {
+                            event.setCancelled(true);
+                            return;
                         }
+                    }
                     //}
                 }
             }
