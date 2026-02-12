@@ -77,6 +77,7 @@ public class Listeners implements Listener {
                 inventory = plugin.getOpenInventories().get(info.toString());
                 if (inventory == null) {
                     PlayerVaults.getInstance().getLogger().severe("Could not find inventory");
+                    info.restore(player);
                     return;
                 }
             }
@@ -84,11 +85,11 @@ public class Listeners implements Listener {
             inv.setContents(inventory.getContents().clone());
 
             PlayerVaults.debug(inventory.getType() + " " + inventory.getClass().getSimpleName());
+            info.restore(player);
             if (inventory.getViewers().size() <= 1) {
                 PlayerVaults.debug("Saving!");
                 vaultManager.saveVault(inv, info.getVaultName(), info.getNumber());
 
-                info.restore(player);
                 plugin.getOpenInventories().remove(info.toString());
             } else {
                 if (badDay) {

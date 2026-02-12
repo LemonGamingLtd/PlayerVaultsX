@@ -372,18 +372,16 @@ public class PlayerVaults extends JavaPlugin {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (this.inVault.containsKey(player.getUniqueId().toString())) {
                 Inventory inventory = player.getOpenInventory().getTopInventory();
+                VaultViewInfo info = this.inVault.get(player.getUniqueId().toString());
                 if (inventory.getViewers().size() == 1) {
-                    VaultViewInfo info = this.inVault.get(player.getUniqueId().toString());
-                    VaultManager.getInstance().saveVault(inventory, player.getUniqueId().toString(), info.getNumber());
+                    VaultManager.getInstance().saveVault(inventory, info.getVaultName(), info.getNumber());
                     this.openInventories.remove(info.toString());
-                    // try this to make sure that they can't make further edits if the process hangs.
-                    player.closeInventory();
-                    info.restore(player);
                 }
+                player.closeInventory();
+                info.restore(player);
 
                 this.inVault.remove(player.getUniqueId().toString());
                 debug("Closing vault for " + player.getName());
-                player.closeInventory();
             }
         }
 
