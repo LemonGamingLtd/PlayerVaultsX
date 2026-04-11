@@ -178,7 +178,7 @@
         <dependency>
             <groupId>dev.kitteh</groupId>
             <artifactId>cardboardbox</artifactId>
-            <version>3.0.6</version>
+            <version>3.1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
