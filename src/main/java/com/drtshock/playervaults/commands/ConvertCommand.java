@@ -43,6 +43,8 @@ public class ConvertCommand implements CommandExecutor {
         converters.add(new AxVaults2Converter());
         converters.add(new UniVaultsConverter());
         converters.add(new XVaultsConverter());
+        converters.add(new FairyVaultsConverter());
+        converters.add(new MaltsConverter());
         this.plugin = plugin;
     }
 
