@@ -21,6 +21,8 @@ package com.drtshock.playervaults.listeners;
 import com.drtshock.playervaults.PlayerVaults;
 import com.drtshock.playervaults.config.file.Translation;
 import com.drtshock.playervaults.events.BlacklistedItemEvent;
+import com.drtshock.playervaults.vaultmanagement.BrowseHolder;
+import com.drtshock.playervaults.vaultmanagement.VaultBrowser;
 import com.drtshock.playervaults.vaultmanagement.VaultHolder;
 import com.drtshock.playervaults.vaultmanagement.VaultManager;
 import com.drtshock.playervaults.vaultmanagement.VaultOperations;
@@ -160,6 +162,12 @@ public class Listeners implements Listener {
             return;
         }
 
+        Inventory topInventory = event.getView().getTopInventory();
+        if (topInventory != null && topInventory.getHolder() instanceof BrowseHolder browseHolder) {
+            handleBrowseClick(event, player, browseHolder);
+            return;
+        }
+
         VaultViewInfo info = PlayerVaults.getInstance().getInVault().get(player.getUniqueId().toString());
         if (info == null) {
             return;
@@ -221,6 +229,43 @@ public class Listeners implements Listener {
         //}
     }
 
+    private void handleBrowseClick(InventoryClickEvent event, Player player, BrowseHolder holder) {
+        event.setCancelled(true);
+
+        if (event.getClickedInventory() == null || event.getClickedInventory().getHolder() != holder) {
+            return;
+        }
+
+        int slot = event.getRawSlot();
+        if (slot < 0 || slot >= VaultBrowser.GUI_SIZE) {
+            return;
+        }
+
+        if (slot == VaultBrowser.PREV_SLOT && holder.getPage() > 0) {
+            VaultBrowser.openSamePage(player, holder, holder.getPage() - 1);
+            return;
+        }
+        if (slot == VaultBrowser.NEXT_SLOT && holder.getPage() < holder.getTotalPages() - 1) {
+            VaultBrowser.openSamePage(player, holder, holder.getPage() + 1);
+            return;
+        }
+        if (slot == VaultBrowser.INFO_SLOT) {
+            return;
+        }
+
+        int entryIndex = (holder.getPage() * VaultBrowser.RESULTS_PER_PAGE) + slot;
+        if (slot >= VaultBrowser.RESULTS_PER_PAGE || entryIndex >= holder.getEntries().size()) {
+            return;
+        }
+        BrowseHolder.Entry entry = holder.getEntries().get(entryIndex);
+        boolean self = holder.getTargetUuid().equals(player.getUniqueId().toString());
+        if (self) {
+            VaultOperations.openOwnVault(player, String.valueOf(entry.vaultNumber()), true);
+        } else {
+            VaultOperations.openOtherVault(player, holder.getTargetUuid(), String.valueOf(entry.vaultNumber()), true);
+        }
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onDrag(InventoryDragEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) {
@@ -230,6 +275,10 @@ public class Listeners implements Listener {
         Player player = (Player) event.getWhoClicked();
 
         Inventory clickedInventory = event.getInventory();
+        if (clickedInventory != null && clickedInventory.getHolder() instanceof BrowseHolder) {
+            event.setCancelled(true);
+            return;
+        }
         if (clickedInventory != null) {
             VaultViewInfo info = PlayerVaults.getInstance().getInVault().get(player.getUniqueId().toString());
             if (info != null) {

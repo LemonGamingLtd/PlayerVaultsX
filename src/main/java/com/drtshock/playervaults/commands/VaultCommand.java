@@ -20,6 +20,7 @@ package com.drtshock.playervaults.commands;
 
 import com.drtshock.playervaults.PlayerVaults;
 import com.drtshock.playervaults.util.Permission;
+import com.drtshock.playervaults.vaultmanagement.VaultBrowser;
 import com.drtshock.playervaults.vaultmanagement.VaultManager;
 import com.drtshock.playervaults.vaultmanagement.VaultOperations;
 import org.bukkit.Bukkit;
@@ -57,11 +58,50 @@ public class VaultCommand implements CommandExecutor {
                         this.plugin.getTL().toggledNavigationHubIcons().title().with("status", newStatus ? "Enabled" : "Disabled").send(sender);
                         break;
                     }
+                    if (args[0].equalsIgnoreCase("browse") || args[0].equalsIgnoreCase("list")) {
+                        if (!VaultBrowser.canUse(player)) {
+                            this.plugin.getTL().noPerms().title().send(player);
+                            break;
+                        }
+                        VaultBrowser.openBrowse(player, player.getUniqueId().toString(), player.getName(), 0);
+                        break;
+                    }
+                    if (args[0].equalsIgnoreCase("search")) {
+                        this.plugin.getTL().searchUsage().title().send(player);
+                        break;
+                    }
+                    if (args[0].equalsIgnoreCase("help") || args[0].equals("?")) {
+                        this.plugin.getTL().help().title().send(player);
+                        break;
+                    }
                     if (VaultOperations.openOwnVault(player, args[0], true)) {
                         //PlayerVaults.getInstance().getInVault().put(player.getUniqueId().toString(), new VaultViewInfo(player.getUniqueId().toString(), Integer.parseInt(args[0]))); ??????????????????????????????????????????????????????????????????
                     }
                     break;
                 case 2:
+                    if (args[0].equalsIgnoreCase("search")) {
+                        if (!VaultBrowser.canUse(player)) {
+                            this.plugin.getTL().noPerms().title().send(player);
+                            break;
+                        }
+                        VaultBrowser.openSearch(player, player.getUniqueId().toString(), player.getName(), args[1], 0);
+                        break;
+                    }
+                    if (args[1].equalsIgnoreCase("browse") || args[1].equalsIgnoreCase("list")) {
+                        if (!player.hasPermission(Permission.ADMIN)) {
+                            this.plugin.getTL().noPerms().title().send(sender);
+                            break;
+                        }
+                        String target = getTarget(args[0]);
+                        YamlConfiguration file = VaultManager.getInstance().getPlayerVaultFile(target, false);
+                        if (file == null) {
+                            this.plugin.getTL().vaultDoesNotExist().title().send(sender);
+                            break;
+                        }
+                        VaultBrowser.openBrowse(player, target, args[0], 0);
+                        break;
+                    }
+
                     if (!player.hasPermission(Permission.ADMIN)) {
                         this.plugin.getTL().noPerms().title().send(sender);
                         break;
@@ -100,6 +140,40 @@ public class VaultCommand implements CommandExecutor {
                     }
                     break;
                 default:
+                    if (args.length == 0) {
+                        this.plugin.getTL().help().title().send(sender);
+                        break;
+                    }
+                    if (args.length >= 3 && args[1].equalsIgnoreCase("search")) {
+                        if (!player.hasPermission(Permission.ADMIN)) {
+                            this.plugin.getTL().noPerms().title().send(sender);
+                            break;
+                        }
+                        String adminTarget = getTarget(args[0]);
+                        YamlConfiguration file = VaultManager.getInstance().getPlayerVaultFile(adminTarget, false);
+                        if (file == null) {
+                            this.plugin.getTL().vaultDoesNotExist().title().send(sender);
+                            break;
+                        }
+                        StringBuilder query = new StringBuilder(args[2]);
+                        for (int i = 3; i < args.length; i++) {
+                            query.append(' ').append(args[i]);
+                        }
+                        VaultBrowser.openSearch(player, adminTarget, args[0], query.toString(), 0);
+                        break;
+                    }
+                    if (args[0].equalsIgnoreCase("search")) {
+                        if (!VaultBrowser.canUse(player)) {
+                            this.plugin.getTL().noPerms().title().send(player);
+                            break;
+                        }
+                        StringBuilder query = new StringBuilder(args[1]);
+                        for (int i = 2; i < args.length; i++) {
+                            query.append(' ').append(args[i]);
+                        }
+                        VaultBrowser.openSearch(player, player.getUniqueId().toString(), player.getName(), query.toString(), 0);
+                        break;
+                    }
                     this.plugin.getTL().help().title().send(sender);
             }
         } else {

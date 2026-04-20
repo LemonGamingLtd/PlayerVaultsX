@@ -13,6 +13,11 @@ commands:
     description: Open a vault.
     aliases: [vault, chest, playervaults, vc]
     permission: playervaults.commands.use
+    usage: |
+      /<command> <number> - open a vault
+      /<command> browse - open a clickable list of all your vaults
+      /<command> search <query> - search items across all your vaults
+      /<command> togglebar - toggle the in-vault navigation bar
   pvdel:
     description: Delete a vault.
     aliases: [vaultdel]

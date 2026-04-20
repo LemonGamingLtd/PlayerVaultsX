@@ -175,6 +175,13 @@ public class Translation {
         this.cleanupMiniMessup(this.translations.blockedItemWithoutModelData);
         this.cleanupMiniMessup(this.translations.blockedItemWithEnchantments);
         this.cleanupMiniMessup(this.translations.signsDisabled);
+        this.cleanupMiniMessup(this.translations.browseTitle);
+        this.cleanupMiniMessup(this.translations.browseTitleOther);
+        this.cleanupMiniMessup(this.translations.browseEmpty);
+        this.cleanupMiniMessup(this.translations.searchTitle);
+        this.cleanupMiniMessup(this.translations.searchUsage);
+        this.cleanupMiniMessup(this.translations.searchNoResults);
+        this.cleanupMiniMessup(this.translations.searchResults);
         this.cleanupMiniMessup(this.placeholders.title);
         for (Map.Entry<String, String> entry : this.colorMappings.entrySet()) {
             if (entry.getValue().contains("§")) {
@@ -229,7 +236,19 @@ public class Translation {
         private TL convertComplete = TL.of("<normal>Converted <info><count></info> players to PlayerVaults.");
         private TL convertBackground = TL.of("<normal>Conversion has been forked to the background. See console for updates.");
         private TL locked = TL.of("<error>Vaults are currently locked while conversion occurs. Please try again in a moment!");
-        private TL help = TL.of("/pv <number>");
+        private TL help = TL.of(
+                "<info>/pv <number></info> <normal>- Open a vault.</normal>",
+                "<info>/pv browse</info> <normal>- Open a clickable list of all your vaults.</normal>",
+                "<info>/pv search <query></info> <normal>- Find items across all your vaults.</normal>",
+                "<info>/pv togglebar</info> <normal>- Toggle the in-vault navigation bar.</normal>"
+        );
+        private TL browseTitle = TL.of("<dark_red>Your Vaults");
+        private TL browseTitleOther = TL.of("<dark_red>Vaults of <player>");
+        private TL browseEmpty = TL.of("<error>You don't have any vaults to browse!");
+        private TL searchTitle = TL.of("<dark_red>Search: <query>");
+        private TL searchUsage = TL.of("<error>Usage: <info>/pv search <query></info>");
+        private TL searchNoResults = TL.of("<normal>No items found matching <info><query></info>.");
+        private TL searchResults = TL.of("<normal>Found <info><count></info> match(es) for <info><query></info>.");
         private TL blockedItem = TL.of("<gold><item></gold> <error>is blocked from vaults.");
         private TL blockedItemWithModelData = TL.of("<error>This item is blocked from vaults.");
         private TL blockedItemWithoutModelData = TL.of("<error>This item is blocked from vaults.");
@@ -387,6 +406,34 @@ public class Translation {
 
     public @NonNull TL toggledNavigationHubIcons() {
         return this.translations.toggledNavigationHubIcons;
+    }
+
+    public @NonNull TL browseTitle() {
+        return this.translations.browseTitle;
+    }
+
+    public @NonNull TL browseTitleOther() {
+        return this.translations.browseTitleOther;
+    }
+
+    public @NonNull TL browseEmpty() {
+        return this.translations.browseEmpty;
+    }
+
+    public @NonNull TL searchTitle() {
+        return this.translations.searchTitle;
+    }
+
+    public @NonNull TL searchUsage() {
+        return this.translations.searchUsage;
+    }
+
+    public @NonNull TL searchNoResults() {
+        return this.translations.searchNoResults;
+    }
+
+    public @NonNull TL searchResults() {
+        return this.translations.searchResults;
     }
 
     public @NonNull Map<String, String> colorMappings() {

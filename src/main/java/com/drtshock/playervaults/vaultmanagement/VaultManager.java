@@ -231,16 +231,16 @@ public class VaultManager {
             return vaults;
         }
 
+        final String prefix = "vault";
         for (String s : file.getKeys(false)) {
-            try {
-                // vault%
-                int number = Integer.parseInt(s.substring(4));
-                vaults.add(number);
-            } catch (NumberFormatException e) {
-                // silent
+            if (!s.startsWith(prefix)) {
+                continue;
             }
+            try {
+                int number = Integer.parseInt(s.substring(prefix.length()));
+                vaults.add(number);
+            } catch (NumberFormatException e) {}
         }
-
 
         return vaults;
     }
