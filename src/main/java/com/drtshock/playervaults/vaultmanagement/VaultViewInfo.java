@@ -26,6 +26,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -68,6 +69,52 @@ public class VaultViewInfo {
 
     private static final int[] RESERVED_SLOTS = IntStream.rangeClosed(9, 17).toArray();
     private static final String SLOT_SETUP = "<###x###>";
+
+    /**
+     * Check whether an item is one of the navigation bar icons.
+     *
+     * @param item Item to check, may be null.
+     * @return {@code true} if it is a navigation icon, {@code false} otherwise.
+     */
+    public static boolean isNavigationIcon(@Nullable ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) {
+            return false;
+        }
+        return item.isSimilar(FILLER_ICON) || item.isSimilar(NEXT_PAGE_ICON)
+                || item.isSimilar(PREVIOUS_PAGE_ICON) || item.isSimilar(DISABLE_BAR_ICON);
+    }
+
+    /**
+     * Check whether a player inventory slot is occupied by the navigation bar.
+     *
+     * @param slot Player inventory slot index.
+     * @return {@code true} if the slot belongs to the navigation bar, {@code false} otherwise.
+     */
+    public static boolean isReservedSlot(int slot) {
+        for (final int reservedSlot : RESERVED_SLOTS) {
+            if (reservedSlot == slot) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Wipe navigation icons left behind in a player's inventory by an unclean shutdown.
+     *
+     * @param player {@link Player} to clean up.
+     */
+    public static void stripNavigationIcons(@NotNull Player player) {
+        final PlayerInventory inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            if (isNavigationIcon(inventory.getItem(slot))) {
+                inventory.setItem(slot, null);
+            }
+        }
+        if (isNavigationIcon(inventory.getItemInOffHand())) {
+            inventory.setItemInOffHand(null);
+        }
+    }
 
     final String vaultName;
     final int number;
@@ -131,6 +178,32 @@ public class VaultViewInfo {
         for (final int reservedSlot : RESERVED_SLOTS) {
             final ItemStack item = this.holder.get(reservedSlot);
             inventory.setItem(reservedSlot, item);
+        }
+    }
+
+    /**
+     * Check if the navigation bar is currently placed in the viewer's inventory.
+     *
+     * @return {@code true} if icons are placed, {@code false} otherwise.
+     */
+    public boolean hasNavigationBar() {
+        return !this.holder.isEmpty();
+    }
+
+    /**
+     * Swap navigation icons out of a death drop list for the items they replaced, so the icons
+     * aren't dropped into the world and the stashed items aren't lost.
+     *
+     * @param drops Drop list to fix up.
+     */
+    public void restoreDrops(@NotNull List<ItemStack> drops) {
+        if (this.holder.isEmpty() || !drops.removeIf(VaultViewInfo::isNavigationIcon)) {
+            return;
+        }
+        for (final ItemStack stashed : this.holder.values()) {
+            if (stashed != null && stashed.getType() != Material.AIR) {
+                drops.add(stashed);
+            }
         }
     }
 

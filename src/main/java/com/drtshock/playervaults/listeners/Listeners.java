@@ -40,11 +40,14 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
@@ -132,7 +135,12 @@ public class Listeners implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onDeath(PlayerDeathEvent event) {
-        saveVault(event.getEntity(), event.getEntity().getOpenInventory().getTopInventory());
+        Player player = event.getEntity();
+        VaultViewInfo info = plugin.getInVault().get(player.getUniqueId().toString());
+        if (info != null) {
+            info.restoreDrops(event.getDrops());
+        }
+        saveVault(player, player.getOpenInventory().getTopInventory());
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -157,11 +165,6 @@ public class Listeners implements Listener {
 
         Player player = (Player) event.getWhoClicked();
 
-        Inventory clickedInventory = event.getClickedInventory();
-        if (clickedInventory == null) {
-            return;
-        }
-
         Inventory topInventory = event.getView().getTopInventory();
         if (topInventory != null && topInventory.getHolder() instanceof BrowseHolder browseHolder) {
             handleBrowseClick(event, player, browseHolder);
@@ -173,6 +176,15 @@ public class Listeners implements Listener {
             return;
         }
 
+        if (handleNavigationClick(event, player, info)) {
+            return;
+        }
+
+        Inventory clickedInventory = event.getClickedInventory();
+        if (clickedInventory == null) {
+            return;
+        }
+
         int num = info.getNumber();
         String inventoryTitle = event.getView().getTitle();
         String title = this.plugin.getVaultTitle(String.valueOf(num));
@@ -181,30 +193,6 @@ public class Listeners implements Listener {
         }
 
         final ItemStack clickedItem = event.getCurrentItem();
-        if (clickedItem != null) {
-            if (clickedItem.isSimilar(NEXT_PAGE_ICON)) {
-                if (info.isForeign(player)) {
-                    VaultOperations.openOtherVault(player, info.getVaultName(), String.valueOf(num + 1), true);
-                } else {
-                    VaultOperations.openOwnVault(player, String.valueOf(num + 1), true);
-                }
-            }
-            if (clickedItem.isSimilar(PREVIOUS_PAGE_ICON) && num > 1) {
-                if (info.isForeign(player)) {
-                    VaultOperations.openOtherVault(player, info.getVaultName(), String.valueOf(num - 1), true);
-                } else {
-                    VaultOperations.openOwnVault(player, String.valueOf(num - 1), true);
-                }
-            }
-            if (clickedItem.isSimilar(DISABLE_BAR_ICON)) {
-                this.plugin.getSettings().toggleNavigationBar(player.getUniqueId());
-                if (info.isForeign(player)) {
-                    VaultOperations.openOtherVault(player, info.getVaultName(), String.valueOf(num), true);
-                } else {
-                    VaultOperations.openOwnVault(player, String.valueOf(num), true);
-                }
-            }
-        }
 
         ItemStack[] items = new ItemStack[3];
         items[0] = clickedItem;
@@ -227,6 +215,91 @@ public class Listeners implements Listener {
             }
         }
         //}
+    }
+
+    /**
+     * Keeps the navigation bar icons pinned in place while a vault is open.
+     *
+     * @return {@code true} if the click was consumed and no further handling should happen.
+     */
+    private boolean handleNavigationClick(InventoryClickEvent event, Player player, VaultViewInfo info) {
+        boolean reservedSlot = info.hasNavigationBar()
+                && event.getClickedInventory() instanceof PlayerInventory
+                && VaultViewInfo.isReservedSlot(event.getSlot());
+
+        ItemStack swapped = null;
+        if (event.getHotbarButton() > -1) {
+            swapped = player.getInventory().getItem(event.getHotbarButton());
+        } else if (event.getClick().name().equals("SWAP_OFFHAND")) {
+            swapped = player.getInventory().getItemInOffHand();
+        }
+
+        ItemStack clickedItem = event.getCurrentItem();
+        if (!reservedSlot && !VaultViewInfo.isNavigationIcon(clickedItem)
+                && !VaultViewInfo.isNavigationIcon(event.getCursor())
+                && !VaultViewInfo.isNavigationIcon(swapped)) {
+            return false;
+        }
+
+        event.setCancelled(true);
+
+        if (!reservedSlot || !VaultViewInfo.isNavigationIcon(clickedItem)) {
+            this.plugin.getTL().blockedNavigationHubIcons().title().send(player);
+            return true;
+        }
+
+        int num = info.getNumber();
+        if (clickedItem.isSimilar(NEXT_PAGE_ICON)) {
+            openVault(player, info, num + 1);
+        } else if (clickedItem.isSimilar(PREVIOUS_PAGE_ICON) && num > 1) {
+            openVault(player, info, num - 1);
+        } else if (clickedItem.isSimilar(DISABLE_BAR_ICON)) {
+            this.plugin.getSettings().toggleNavigationBar(player.getUniqueId());
+            openVault(player, info, num);
+        }
+        return true;
+    }
+
+    private void openVault(Player player, VaultViewInfo info, int number) {
+        if (info.isForeign(player)) {
+            VaultOperations.openOtherVault(player, info.getVaultName(), String.valueOf(number), true);
+        } else {
+            VaultOperations.openOwnVault(player, String.valueOf(number), true);
+        }
+    }
+
+    /**
+     * @return {@code true} if the drag would move a navigation icon or touch a navigation slot.
+     */
+    private boolean touchesNavigationBar(InventoryDragEvent event, VaultViewInfo info) {
+        if (VaultViewInfo.isNavigationIcon(event.getOldCursor())) {
+            return true;
+        }
+        if (!info.hasNavigationBar()) {
+            return false;
+        }
+        int topSize = event.getView().getTopInventory().getSize();
+        for (int rawSlot : event.getRawSlots()) {
+            if (rawSlot >= topSize && VaultViewInfo.isReservedSlot(event.getView().convertSlot(rawSlot))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onDropItem(PlayerDropItemEvent event) {
+        if (!VaultViewInfo.isNavigationIcon(event.getItemDrop().getItemStack())) {
+            return;
+        }
+        if (this.plugin.getInVault().containsKey(event.getPlayer().getUniqueId().toString())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onJoin(PlayerJoinEvent event) {
+        VaultViewInfo.stripNavigationIcons(event.getPlayer());
     }
 
     private void handleBrowseClick(InventoryClickEvent event, Player player, BrowseHolder holder) {
@@ -282,6 +355,10 @@ public class Listeners implements Listener {
         if (clickedInventory != null) {
             VaultViewInfo info = PlayerVaults.getInstance().getInVault().get(player.getUniqueId().toString());
             if (info != null) {
+                if (touchesNavigationBar(event, info)) {
+                    event.setCancelled(true);
+                    return;
+                }
                 int num = info.getNumber();
                 String inventoryTitle = event.getView().getTitle();
                 String title = this.plugin.getVaultTitle(String.valueOf(num));
