@@ -248,6 +248,7 @@ public class Translation {
         private TL blockedItem = TL.of("<gold><item></gold> <error>is blocked from vaults.");
         private TL blockedItemWithModelData = TL.of("<error>This item is blocked from vaults.");
         private TL blockedItemWithoutModelData = TL.of("<error>This item is blocked from vaults.");
+        private TL blockedItemModel = TL.of("<error>This item is blocked from vaults.");
         private TL blockedItemWithEnchantments = TL.of("<error>This item's enchantments are blocked from vaults.");
         private TL signsDisabled = TL.of("<error>Vault signs are currently disabled.");
         private TL blockedNavigationHubIcons = TL.of("<error>You cannot interact with navigation hub icons!");
@@ -388,6 +389,10 @@ public class Translation {
 
     public @NonNull TL blockedItemWithoutModelData() {
         return this.translations.blockedItemWithoutModelData;
+    }
+
+    public @NonNull TL blockedItemModel() {
+        return this.translations.blockedItemModel;
     }
 
     public @NonNull TL blockedItemWithEnchantments() {return this.translations.blockedItemWithEnchantments;}
