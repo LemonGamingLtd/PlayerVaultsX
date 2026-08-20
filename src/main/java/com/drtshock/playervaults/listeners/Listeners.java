@@ -336,10 +336,10 @@ public class Listeners implements Listener {
         //    }
         //}
 //
-        //if (PlayerVaults.getInstance().isBlockedMaterial(item.getType())) {
-        //    reasons.add(BlacklistedItemEvent.Reason.TYPE);
-        //    responses.put(BlacklistedItemEvent.Reason.TYPE, this.plugin.getTL().blockedItem().title().with("item", item.getType().name()));
-        //}
+        if (PlayerVaults.getInstance().isBlockedMaterial(item.getType())) {
+            reasons.add(BlacklistedItemEvent.Reason.TYPE);
+            responses.put(BlacklistedItemEvent.Reason.TYPE, this.plugin.getTL().blockedItem().title().with("item", item.getType().name()));
+        }
 
         Set<Enchantment> ench = PlayerVaults.getInstance().isEnchantmentBlocked(item);
         if (!ench.isEmpty()) {
